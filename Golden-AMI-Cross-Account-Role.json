@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": " This cloudformation template creates Cross-account role for creating Golden AMI metadata in child accounts.(fdp-1o82td9bk)",
+  "Description": " This cloudformation template creates Cross-account role for creating Golden AMI metadata in child accounts.",
   "Parameters": {
     "roleName": {
       "Type": "String",

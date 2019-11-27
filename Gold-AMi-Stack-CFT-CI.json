@@ -1100,7 +1100,9 @@
                             "Sid": "My-statement-id",
                             "Effect": "Allow",
                             "Principal": {
-                                "AWS": "*"
+                                "AWS": [
+                                    "arn:aws:iam::139421610983:root"
+                                ]
                             },
                             "Action": "sns:Publish",
                             "Resource": {

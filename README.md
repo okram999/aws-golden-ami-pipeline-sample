@@ -14,3 +14,36 @@ Note - The GitHUB repo is currently not available for external commits/pull requ
 ## License
 
 This library is licensed under the MIT-0.
+
+
+## Observations:
+ - Mismatch in the actual inspector report and the values stored in the parameter store  [FIXED]
+ - What are the hard code iam account # in InspectorCompleteTopicPolicy  [not fixed yet]
+ - Inspector doesn't support SLE [There is already a request to support SLE]
+ - Instructions to create the portfolio are off as the UI have changed.
+    ```
+        In the child/recieving acc, a new portfolio have to be created and them the shared product have to be imported.
+        Then create the launch contrains 
+        Add the user a.k.a the childuser
+    ```
+        
+ 
+## Nice to Have
+ - Support for encrypted AMI
+     * images encrypted with AWS managed keys cannot be shared
+
+    * For this to work, the CMK keys needs to be
+
+
+
+
+ - Yaml version of the files, to support in-line comments
+ - Convert to a nested stack | Separate the network part template
+ - Put Parameter to avoid filling them before launching
+
+
+## Validate
+ - End to End , as-is flow 
+ - Validate the config to flag non-compliant EC2 instances
+
+
