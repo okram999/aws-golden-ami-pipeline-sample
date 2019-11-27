@@ -1,16 +1,16 @@
 import boto3
 import time
 
-productOS = "lin"
-productName = "httpd"
+productOS = "AmzLin"
+productName = "Base"
 productVersion = '7'
-amiId = 'ami-0b2048ba609342b72'
+amiId = 'ami-00a38949ddb2ddb5c'
 fullName = amiId+'-'+productOS+'/'+productName+'/'+productVersion
 print(f"fullname is: {fullName}")
 inspector = boto3.client('inspector','us-west-2')
 ssm = boto3.client('ssm','us-west-2')
 rules = inspector.list_rules_packages()
-instanceId = 'i-08f6c291ffba86d40'
+instanceId = 'i-025ed195df1d09a85'
 
 ParamName='/GoldenAMI/'+productOS+'/'+productName+'/'+productVersion+'/latestInstance'
 ssm.put_parameter(Name=ParamName,Value=instanceId,Type='String',Overwrite=True)
@@ -23,6 +23,10 @@ print("Total length found: "+str(len(existingTemplates['assessmentTemplateArns']
 
 if len(existingTemplates['assessmentTemplateArns'])==0:
   resGroup = inspector.create_resource_group(resourceGroupTags=[{'key': 'Type','value': amiId+'-'+productOS+'/'+productName+'/'+productVersion}])
+  rg = inspector.describe_resource_groups(resourceGroupArns=[resGroup['resourceGroupArn']])
+  print(rg)
+  # a check for existence of target needs to be added
+  # also check the tags
   target = inspector.create_assessment_target(assessmentTargetName=fullName,resourceGroupArn=resGroup['resourceGroupArn'])
   template = inspector.create_assessment_template(assessmentTargetArn=target['assessmentTargetArn'],assessmentTemplateName=amiId+'/'+productOS+'/'+productName+'/'+productVersion, durationInSeconds=900,rulesPackageArns=rules['rulesPackageArns'])
   assessmentTemplateArn=template['assessmentTemplateArn']
