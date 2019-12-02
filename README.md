@@ -18,7 +18,7 @@ This library is licensed under the MIT-0.
 
 ## Observations:
  - Mismatch in the actual inspector report and the values stored in the parameter store  [FIXED]
- - What are the hard code iam account # in InspectorCompleteTopicPolicy  [not fixed yet]
+ - What are the hard code iam account # in InspectorCompleteTopicPolicy  [These are required for inspector to sent the notifications. https://docs.aws.amazon.com/inspector/latest/userguide/inspector_assessments.html]
  - Inspector doesn't support SLE [There is already a request to support SLE]
  - Instructions to create the portfolio are off as the UI have changed.
     ```
