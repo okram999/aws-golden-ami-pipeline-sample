@@ -34,7 +34,12 @@ This library is licensed under the MIT-0.
 
     * For this to work, the CMK keys needs to be
 
-
+ - Notifications on failures
+    * Add lambda
+    * Add role
+    * Add a sns Topic
+    * Add subscription to the sns topic
+    * analyse the ones that says "proceed on failure" | Great if there can be 2 things that can be invoked in case of a failure
 
 
  - Yaml version of the files, to support in-line comments
