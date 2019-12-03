@@ -936,7 +936,7 @@
                 ]
             }
         },
-        "Runtime": "python3.8", 
+        "Runtime": "python3.7", 
         "Timeout": 300,
         "Handler": "index.lambda_handler",
         "MemorySize": 512
@@ -1590,7 +1590,7 @@
                             "action": "aws:runInstances",
                             "timeoutSeconds": 3600,
                             "maxAttempts": 1,
-                            "onFailure": "Abort",
+                            "onFailure": "step:notifyFailure",
                             "inputs": {
                                 "ImageId": "{{ sourceAMIid }}",
                                 "InstanceType": "{{instanceType}}",
@@ -1609,7 +1609,7 @@
                             "action": "aws:runCommand",
                             "maxAttempts": 3,
                             "timeoutSeconds": 3600,
-                            "onFailure": "Abort",
+                            "onFailure": "step:notifyFailure",
                             "inputs": {
                                 "DocumentName": "AWS-RunShellScript",
                                 "InstanceIds": [
@@ -1632,7 +1632,7 @@
                             "action": "aws:changeInstanceState",
                             "timeoutSeconds": 1200,
                             "maxAttempts": 1,
-                            "onFailure": "Abort",
+                            "onFailure": "step:notifyFailure",
                             "inputs": {
                                 "InstanceIds": [
                                     "{{ startInstances.InstanceIds }}"
@@ -1702,7 +1702,7 @@
                             "action": "aws:runInstances",
                             "timeoutSeconds": 1200,
                             "maxAttempts": 1,
-                            "onFailure": "Abort",
+                            "onFailure": "step:notifyFailure",
                             "inputs": {
                                 "ImageId": "{{ createImage.ImageId }}",
                                 "InstanceType": "{{instanceType}}",
@@ -1720,7 +1720,7 @@
                             "action": "aws:runCommand",
                             "maxAttempts": 3,
                             "timeoutSeconds": 3600,
-                            "onFailure": "Abort",
+                            "onFailure": "step:notifyFailure",
                             "inputs": {
                                 "DocumentName": "AmazonInspector-ManageAWSAgent",
                                 "InstanceIds": [
@@ -1759,7 +1759,7 @@
                             "action": "aws:invokeLambdaFunction",
                             "maxAttempts": 3,
                             "timeoutSeconds": 120,
-                            "onFailure": "Abort",
+                            "onFailure": "step:notifyFailure",
                             "inputs": {
                                 "FunctionName": { "Ref": "RunInspectorLambdaFunction"},
                                 "Payload": {
@@ -1801,7 +1801,7 @@
                             "action": "aws:invokeLambdaFunction",
                             "timeoutSeconds": 1200,
                             "maxAttempts": 1,
-                            "onFailure": "Abort",
+                            "onFailure": "step:notifyFailure",
                             "inputs": {
                                 "FunctionName":{ "Ref": "AppendParamLambda"},
 
@@ -1812,7 +1812,7 @@
                             "name": "approve",
                             "action": "aws:approve",
                             "timeoutSeconds": 172800,
-                            "onFailure": "Abort",
+                            "onFailure": "step:notifyFailure",
                             "inputs": {
                                 "NotificationArn": "{{ ApproverNotificationArn }}",
                                 "Message": "Please check contents of SSM Parameter : /GoldenAMI/{{productOSAndVersion}}/{{productName}}/{{AMIVersion}}/NumCVEs and approve/deny the build.",
@@ -1827,7 +1827,7 @@
                             "action": "aws:invokeLambdaFunction",
                             "timeoutSeconds": 1200,
                             "maxAttempts": 1,
-                            "onFailure": "Abort",
+                            "onFailure": "step:notifyFailure",
                             "inputs": {
                                 "FunctionName":{ "Ref": "AppendParamLambda"},
                                 "Payload": "{\"parameterName\":\"/GoldenAMI/latest\", \"valueToBeCreatedOrAppended\":\"{{createImage.ImageId}}\"}"
