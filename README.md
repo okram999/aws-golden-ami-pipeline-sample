@@ -30,11 +30,11 @@ This library is licensed under the MIT-0.
  
 ## Nice to Have
  - Support for encrypted AMI
-     * images encrypted with AWS managed keys cannot be shared
+    * images encrypted with AWS managed keys cannot be shared
+    * YAML version of the templates [ use the cfn-flip tool and test ]
 
-    * For this to work, the CMK keys needs to be
 
- - Notifications on failures
+ - Notifications on failures [ DONE ]
     * Add lambda
     * Add role
     * Add a sns Topic

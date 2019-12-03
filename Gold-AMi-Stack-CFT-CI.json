@@ -1831,7 +1831,8 @@
                             "inputs": {
                                 "FunctionName":{ "Ref": "AppendParamLambda"},
                                 "Payload": "{\"parameterName\":\"/GoldenAMI/latest\", \"valueToBeCreatedOrAppended\":\"{{createImage.ImageId}}\"}"
-                            }
+                            },
+                            "isEnd": "true"
                         },
                         {
                             "name": "notifyFailure",
