@@ -50,5 +50,6 @@ This library is licensed under the MIT-0.
 ## Validate
  - End to End , as-is flow 
  - Validate the config to flag non-compliant EC2 instances
+ - custom scripts for the pre and post update [DONE]
 
 
