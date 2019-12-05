@@ -1,0 +1,4 @@
+1. Make sure that the parameter is updated with every build/publish to child accounts
+2. Recreate a cft to create the rule with the managed rule
+  - this should create the rule using the managed rule, runs every 1hr
+  - create lambda that periodically updates the rule

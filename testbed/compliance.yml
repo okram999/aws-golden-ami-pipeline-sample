@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Cloudformation template to create a rule using the managed config rule'
+Resources:
+  ConfigRule:
+      Type: AWS::Config::ConfigRule
+      Properties: 
+          ConfigRuleName: ec2-compliance-checker
+          Description: "Checks if the EC2 instances are using the approved AMI's"
+          InputParameters: '{"amiIds":"initial"}'
+          # MaximumExecutionFrequency: this managed rule is evaluated when a config changes
+          Scope: 
+              ComplianceResourceTypes:
+                  - "AWS::EC2::Instance"
+          Source: 
+              Owner: 'AWS'
+              SourceIdentifier: 'APPROVED_AMIS_BY_ID'
+
+# LambdaRole
+# needs access to the ssm parameter store and config
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: arn:aws:logs:*:*:*
+
+# Lambda to fetch and update ami
+  UpdateAmiLambdaFunction:
+    Type: AWS::Lambda::Function
+    Description: LambdaFunction to fetch and update the AMIS
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
+      Runtime: python3.7
+      Code:
+        ZipFile: !Sub |
+          import boto3
+          import json
+          region = 'us-west-1'
+          client = boto3.client('config', region)
+          ssm = boto3.client('ssm', region)
+          amis = ssm.get_parameter(Name="/GoldenAMI/latest")['Parameter']['Value']
+          print(type(amis))
+          update_ami = {}
+          update_ami['amiIds'] = amis
+          json_update_ami = json.dumps(update_ami)
+          print(json_update_ami)
+          
+          response = client.put_config_rule(
+              ConfigRule={
+                  'ConfigRuleArn': 
+                    !GetAtt:
+                      - ConfigRule
+                      - Arn
+                  'Source': {
+                      'Owner': 'AWS',
+                      'SourceIdentifier': 'APPROVED_AMIS_BY_ID',
+                  },
+                  'InputParameters': json_update_ami
+              },
+          )
+
+       
+
+
+
+# CW Events to invoke the lambda
