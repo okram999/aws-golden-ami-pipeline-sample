@@ -54,7 +54,8 @@ Resources:
                     - ':'
                     - !Ref AWS::AccountId
                     - ':'
-                    - 'parameter/GoldenAMI/latest'
+                    - 'parameter'
+                    - !Ref PathToSSMParameter
           - Effect: Allow
             Action:
               - "config:*"
