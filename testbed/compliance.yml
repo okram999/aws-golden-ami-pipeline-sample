@@ -18,9 +18,7 @@ Resources:
           Source: 
               Owner: 'AWS'
               SourceIdentifier: 'APPROVED_AMIS_BY_ID'
-
 # LambdaRole
-# needs access to the ssm parameter store and config
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -61,9 +59,6 @@ Resources:
               - "config:*"
             Resource: 
               - "*"
-              # - !GetAtt
-              #     - ConfigRule
-              #     - Arn
 
 # Lambda to fetch and update ami
   UpdateAmiLambdaFunction:
@@ -103,10 +98,7 @@ Resources:
                     'InputParameters': json_update_ami
                 },
             )
-
-
 # CW Events to invoke the lambda
-
   cweventrule:
     Type: AWS::Events::Rule
     Properties: 
@@ -120,11 +112,10 @@ Resources:
           name:
             - "/GoldenAMI/latest"
           operation:
+            - Create
             - Update
             - Delete
-      # Name: String
-      # RoleArn: String
-      # ScheduleExpression: String
+            - LabelParameterVersion
       State: ENABLED
       Targets: 
         - Arn: !GetAtt 
