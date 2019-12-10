@@ -130,4 +130,16 @@ Resources:
         - Arn: !GetAtt 
             - UpdateAmiLambdaFunction
             - Arn
-          Id: lambda-fucntion  
+          Id: lambda-fucntion
+
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: 
+        Ref: "UpdateAmiLambdaFunction"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "cweventrule"
+          - "Arn"

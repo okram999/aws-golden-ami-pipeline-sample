@@ -31,6 +31,8 @@ This library is licensed under the MIT-0.
 ## Nice to Have
  - Support for encrypted AMI
     * images encrypted with AWS managed keys cannot be shared
+     - to support this, a predefined cmk shared child accounts 
+     - 
     * YAML version of the templates [ use the cfn-flip tool and test ]
 
 
@@ -52,4 +54,10 @@ This library is licensed under the MIT-0.
  - Validate the config to flag non-compliant EC2 instances
  - custom scripts for the pre and post update [DONE]
 
+
+
+Things fixed:
+ - inspector results in the main flow and continuous pipeline
+ - compliance flow [new changes]
+ - the included and excluded packages
 
