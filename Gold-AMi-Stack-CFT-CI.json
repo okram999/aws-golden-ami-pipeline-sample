@@ -80,6 +80,16 @@
          "Default":"{\"Account_ID_1\":\"region_1,region_2\"}",
       "Description": "Metadata of accounts and regions for distributing the golden AMI."
       },
+      "cmkMetadataJSON":{
+        "Type":"String",
+        "Default":"{\"srcregion1\":\"cmk1\",\"srcregion2\":\"cmk2\"}",
+     "Description": "Metadata of source account's regions and cmk in the region. The cmk will be use to encrypt the ami copied from the source region in the source account"
+     },
+     "srcRegionCmkId":{
+        "Type":"String",
+        "Default":"ff214fd2-000f-4070-8ca9-0c4719a858e8",
+     "Description": "kms cmk key id for the source region where the golden ami will be created. This is used by lambda functions role to get access to the cmk"
+     },
        "roleName":{
          "Type":"String",
          "Default":"goldenAMICrossAccountRole",
@@ -1461,6 +1471,27 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "PolicyName": "AccessToCMK",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "kms:*",
+                                    "Resource": { "Fn::Join":
+                                        [
+                                            "",
+                                            [
+                                                "arn:aws:kms:", {"Ref" : "AWS::Region"}, ":", {"Ref":"AWS::AccountId"}, ":", "key/", {"Ref": "srcRegionCmkId"}
+                                            ]
+                                        ]
+        
+                                    }
+                                }
+                            ]
+                        }
                     }
                 ]
             }
@@ -1911,6 +1942,19 @@
                                 "aws:TagKeys": ["AMI-Type","ProductName","continuous-assessment-instance","ProductOSAndVersion","version","Copied_From:(owner-id/ami-id)"]
                               }
                             }
+                        },
+                        {
+                            "Effect":"Allow",
+                            "Action":"kms:*",
+                            "Resource": { "Fn::Join":
+                                [
+                                    "",
+                                    [
+                                        "arn:aws:kms:", "*", ":", {"Ref":"AWS::AccountId"}, ":", "key/", "*"
+                                    ]
+                                ]
+
+                            }
                         }
                      ]
                   }
@@ -1945,6 +1989,9 @@
                         "    ssm = boto3.client('ssm',sourceRegion)",
                         "    allRegions = set();",
                         "    accountMetadata=json.loads(event['MetadataJSON'])",
+                        "    cmkaccountMetadata=json.loads(event['cmkMetadataJSON'])",
+                        "    print(cmkaccountMetadata)",
+                        "    print(type(cmkaccountMetadata))",
                         "    metadataParamName=event['MetadataParamName']",
                         "    amiIDParamName=event['AmiIDParamName']",
                         "    AMIId =ssm.get_parameter(Name=amiIDParamName)['Parameter']['Value']", 
@@ -1962,6 +2009,7 @@
                         "    ",
                         "    outputJson=\"{\"",
                         "    for region in allRegions: ",
+                        "        print(f'the cmk id in use is: {cmkaccountMetadata[region]}')",
                         "        ec2 = boto3.client('ec2',region)",
                         "        ec2Res  = boto3.resource('ec2',region)",
                         "        print (\"Copying Image {id} to {aws_region}\".format(aws_region=region, id=AMIId))",
@@ -1970,7 +2018,8 @@
                         "            SourceRegion=sourceRegion,",
                         "            SourceImageId=AMIId,",
                         "            Name=\"copied from \"+originalAMI.name",
-                        "        )  ",
+                        "            Encrypted=True",
+                        "            KmsKeyId=cmkaccountMetadata[region])",
                         "        copiedAMIId=new_ami['ImageId']",
                         "        ssm = boto3.client('ssm',region)",
                         "        ssm.put_parameter(Name=amiIDParamName,Value=copiedAMIId,Type='String',Overwrite=True)",
@@ -2054,6 +2103,19 @@
                            "Effect":"Allow",
                            "Action":["ec2:ModifyImageAttribute"],
                            "Resource":"*"
+                        },
+                        {
+                            "Effect":"Allow",
+                            "Action":"kms:*",
+                            "Resource": { "Fn::Join":
+                                [
+                                    "",
+                                    [
+                                        "arn:aws:kms:", "*", ":", {"Ref":"AWS::AccountId"}, ":", "key/", "*"
+                                    ]
+                                ]
+
+                            }
                         }
                      ]
                   }
@@ -2155,6 +2217,11 @@
                      "description":"This parameter contains details of accounts and regions with which AMI needs to be shared. Kindly do not change the structure of the JSON",
                      "default":{"Ref":"MetadataJSON"}
                   },
+                  "cmkMetadataJSON":{
+                    "type":"String",
+                    "description":"Source account region to CMK key arn mapping",
+                    "default":{"Ref":"cmkMetadataJSON"}
+                 },                  
                     "bucketName":{
                      "type":"String",
                      "description":"This parameter contains name of the bucket in which template file is stored",
@@ -2195,7 +2262,7 @@
                      "onFailure":"Abort",
                      "inputs":{
                         "FunctionName":{ "Ref": "CopyToMultipleRegionsLambdaFunction" },
-                        "Payload":"{\"MetadataJSON\":\"{{ MetadataJSON }}\",\"ProductName\":\"{{ productName }}\",\"ProductOSAndVersion\":\"{{ productOSAndVersion }}\",\"version\":\"{{ buildVersion }}\",\"AmiIDParamName\":\"/GoldenAMI/{{productOSAndVersion}}/{{productName}}/{{buildVersion}}\", \"MetadataParamName\":\"{{ MetadataParamName }}\"}"
+                        "Payload":"{\"cmkMetadataJSON\":\"{{ cmkMetadataJSON }}\",\"MetadataJSON\":\"{{ MetadataJSON }}\",\"ProductName\":\"{{ productName }}\",\"ProductOSAndVersion\":\"{{ productOSAndVersion }}\",\"version\":\"{{ buildVersion }}\",\"AmiIDParamName\":\"/GoldenAMI/{{productOSAndVersion}}/{{productName}}/{{buildVersion}}\", \"MetadataParamName\":\"{{ MetadataParamName }}\"}"
                      }
                   },
                   {
