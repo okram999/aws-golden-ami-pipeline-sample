@@ -2017,8 +2017,8 @@
                         "            DryRun=False,",
                         "            SourceRegion=sourceRegion,",
                         "            SourceImageId=AMIId,",
-                        "            Name=\"copied from \"+originalAMI.name",
-                        "            Encrypted=True",
+                        "            Name=\"copied from \"+originalAMI.name,",
+                        "            Encrypted=True,",
                         "            KmsKeyId=cmkaccountMetadata[region])",
                         "        copiedAMIId=new_ami['ImageId']",
                         "        ssm = boto3.client('ssm',region)",
@@ -2731,7 +2731,28 @@
                       }
                      ]
                   }
-               }
+               },
+               {
+                "PolicyName": "AccessToCMK",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": "kms:*",
+                            "Resource": { "Fn::Join":
+                                [
+                                    "",
+                                    [
+                                        "arn:aws:kms:", {"Ref" : "AWS::Region"}, ":", {"Ref":"AWS::AccountId"}, ":", "key/", {"Ref": "srcRegionCmkId"}
+                                    ]
+                                ]
+
+                            }
+                        }
+                    ]
+                }
+            }
             ]
          }
       },
