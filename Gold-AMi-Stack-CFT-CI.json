@@ -1479,7 +1479,14 @@
                             "Statement": [
                                 {
                                     "Effect": "Allow",
-                                    "Action": "kms:*",
+                                    "Action": [
+                                        "kms:ReEncrypt*",
+                                        "kms:GenerateDataKey*",
+                                        "kms:Encrypt",
+                                        "kms:DescribeKey",
+                                        "kms:CreateGrant",
+                                        "kms:Decrypt"
+                                    ],
                                     "Resource": { "Fn::Join":
                                         [
                                             "",
@@ -1945,7 +1952,14 @@
                         },
                         {
                             "Effect":"Allow",
-                            "Action":"kms:*",
+                            "Action":[
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*",
+                                "kms:Encrypt",
+                                "kms:DescribeKey",
+                                "kms:CreateGrant",
+                                "kms:Decrypt"
+                            ],
                             "Resource": { "Fn::Join":
                                 [
                                     "",
@@ -2106,7 +2120,14 @@
                         },
                         {
                             "Effect":"Allow",
-                            "Action":"kms:*",
+                            "Action": [
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*",
+                                "kms:Encrypt",
+                                "kms:DescribeKey",
+                                "kms:CreateGrant",
+                                "kms:Decrypt"
+                            ],
                             "Resource": { "Fn::Join":
                                 [
                                     "",
@@ -2739,7 +2760,14 @@
                     "Statement": [
                         {
                             "Effect": "Allow",
-                            "Action": "kms:*",
+                            "Action": [
+                                "kms:ReEncrypt*",
+                                "kms:GenerateDataKey*",
+                                "kms:Encrypt",
+                                "kms:DescribeKey",
+                                "kms:CreateGrant",
+                                "kms:Decrypt"
+                            ],
                             "Resource": { "Fn::Join":
                                 [
                                     "",
