@@ -39,7 +39,9 @@ Resources:
               Sid: "Allow use of the key"
               Effect: "Allow"
               Principal:
-                AWS: "arn:aws:iam::636974868434:role/localAdmin"
+                AWS:
+                 - "arn:aws:iam::636974868434:role/localAdmin"
+                 - "arn:aws:iam::636974868434:role/AwsSecurityAudit"
               Action:
                 - "kms:DescribeKey"
                 - "kms:Encrypt"
