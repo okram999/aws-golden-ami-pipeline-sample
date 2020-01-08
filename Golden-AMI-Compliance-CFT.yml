@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Cloudformation template to create a rule using the managed config rule'
+Parameters:
+  PathToSSMParameter:
+    Type: String
+    Default: "/GoldenAMI/latest"
+Resources:
+  ConfigRule:
+      Type: AWS::Config::ConfigRule
+      Properties: 
+          # ConfigRuleName: ec2-compliance-checker
+          Description: "Checks if the EC2 instances are using the approved AMI's"
+          InputParameters: '{"amiIds":"initial"}'
+          # MaximumExecutionFrequency: this managed rule is evaluated when a config changes
+          Scope: 
+              ComplianceResourceTypes:
+                  - "AWS::EC2::Instance"
+          Source: 
+              Owner: 'AWS'
+              SourceIdentifier: 'APPROVED_AMIS_BY_ID'
+# LambdaRole
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: ec2-ami-compliance-lambda-policy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+            Resource: 
+              - !Join
+                  - ''
+                  - - 'arn:aws:ssm:'
+                    - !Ref AWS::Region
+                    - ':'
+                    - !Ref AWS::AccountId
+                    - ':'
+                    - 'parameter'
+                    - !Ref PathToSSMParameter
+          - Effect: Allow
+            Action:
+              - "config:*"
+            Resource: 
+              - "*"
+
+# Lambda to fetch and update ami
+  UpdateAmiLambdaFunction:
+    Type: AWS::Lambda::Function
+    Description: LambdaFunction to fetch and update the AMIS
+    Properties:
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
+      Runtime: python3.7
+      Timeout: 300
+      Environment:
+        Variables:
+          "config_rule_arn": !GetAtt 'ConfigRule.Arn'
+          "ssm_param_name": !Ref PathToSSMParameter
+      Code:
+        ZipFile: !Sub |
+          import boto3
+          import json
+          import os
+          def lambda_handler(event, context):
+            region = os.environ['AWS_DEFAULT_REGION']
+            client = boto3.client('config', region)
+            ssm = boto3.client('ssm', region)
+            amis = ssm.get_parameter(Name= os.environ['ssm_param_name'])['Parameter']['Value']
+            print(type(amis))
+            update_ami = {}
+            update_ami['amiIds'] = amis
+            json_update_ami = json.dumps(update_ami)
+            print(json_update_ami)
+            response = client.put_config_rule(
+                ConfigRule={
+                    'ConfigRuleArn': os.environ['config_rule_arn'],
+                    'Source': {
+                        'Owner': 'AWS',
+                        'SourceIdentifier': 'APPROVED_AMIS_BY_ID',
+                    },
+                    'InputParameters': json_update_ami
+                },
+            )
+# CW Events to invoke the lambda
+  cweventrule:
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: 'Create event when system manager parameter store is updated or deleted'
+      EventPattern: 
+        source:
+          - aws.ssm
+        detail-type: 
+          - "Parameter Store Change"
+        detail:
+          name:
+            - "/GoldenAMI/latest"
+          operation:
+            - Create
+            - Update
+            - Delete
+            - LabelParameterVersion
+      State: ENABLED
+      Targets: 
+        - Arn: !GetAtt 
+            - UpdateAmiLambdaFunction
+            - Arn
+          Id: lambda-fucntion
+
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: 
+        Ref: "UpdateAmiLambdaFunction"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "cweventrule"
+          - "Arn"

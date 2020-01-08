@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: gtm platform Lampda application deployment for ELasticCloud
+Parameters:
+#   SystemUserAccount:
+#     Description: The syatem user account used to assume deployment role
+#     Type: String
+#     Default: usr-test1
+  DeploymentRoleName:
+    Description: The deployment role used to deploy cloudformation template
+    Type: String
+    Default: gtm-platform-deployment-role
+  GTMPlatformLambdaRoleName:
+    Description: The execution role for gtm platform
+    Type: String
+    Default: gtm-platform-lambda-role
+  GTMPlatformKMSKeyAliasName:
+    Description: The lambda function name for gtm platform
+    Type: String
+    Default: gtm-platform-kms-key
+Resources:
+  GTMPlatformLambdaRole:
+    Type: AWS::IAM::Role
+    DependsOn:
+      - GTMPlatformKMSKey
+    Properties:
+      RoleName: !Ref GTMPlatformLambdaRoleName
+      AssumeRolePolicyDocument:
+        Version: '2008-10-17'
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AmazonVPCFullAccess
+      Policies:
+        - PolicyName: GTMPlatformLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: cloudwatch:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - kms:EnableKeyRotation
+                  - kms:EnableKey
+                  - kms:ImportKeyMaterial
+                  - kms:Decrypt
+                  - kms:UntagResource
+                  - kms:UpdateKeyDescription
+                  - kms:GetKeyPolicy
+                  - kms:GenerateDataKeyWithoutPlaintext
+                  - kms:CancelKeyDeletion
+                  - kms:ListResourceTags
+                  - kms:DeleteImportedKeyMaterial
+                  - kms:DisableKey
+                  - kms:DisableKeyRotation
+                  - kms:ListGrants
+                  - kms:UpdateAlias
+                  - kms:GetParametersForImport
+                  - kms:TagResource
+                  - kms:Encrypt
+                  - kms:GetKeyRotationStatus
+                  - kms:ScheduleKeyDeletion
+                  - kms:CreateAlias
+                  - kms:DescribeKey
+                  - kms:DeleteAlias
+                Resource: !GetAtt GTMPlatformKMSKey.Arn
+              - Effect: Allow
+                Action:
+                  - kms:GenerateRandom
+                  - kms:GenerateDataKey
+                  - kms:ReEncryptTo
+                  - kms:ReEncryptFrom
+                Resource: "*"
+  GTMPlatformKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Key used to encrypt decrypt EBS volumes at rest
+      Enabled: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable permissions for admin
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':root'
+            Action:
+              - 'kms:*'
+            Resource: '*'
+          - Sid: Allow access for Key Administrators
+            Effect: Allow
+            Principal:
+              AWS:
+                - !Sub
+                  - 'arn:aws:iam::${accountId}:role/${gtmDeploymentRoleName}'
+                  - accountId: !Ref 'AWS::AccountId'
+                    gtmDeploymentRoleName: !Ref 'DeploymentRoleName'
+            Action:
+              - kms:Create*
+              - kms:Describe*
+              - kms:Enable*
+              - kms:List*
+              - kms:Put*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Disable*
+              - kms:Get*
+              - kms:Delete*
+              - kms:TagResource
+              - kms:UntagResource
+            Resource: "*"
+          - Sid: Allow use of the key
+            Effect: Allow
+            Principal:
+              AWS:
+                - !Sub
+                  - 'arn:aws:iam::${accountId}:role/${gtmPlatformLambdaRoleName}'
+                  - accountId: !Ref 'AWS::AccountId'
+                    gtmPlatformLambdaRoleName: !Ref 'GTMPlatformLambdaRoleName'
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: "*"
+          - Sid: Allow attachment of persistent resources
+            Effect: Allow
+            Principal:
+              AWS:
+                - !Sub
+                  - 'arn:aws:iam::${accountId}:role/${gtmPlatformLambdaRoleName}'
+                  - accountId: !Ref 'AWS::AccountId'
+                    gtmPlatformLambdaRoleName: !Ref 'GTMPlatformLambdaRoleName'
+            Action:
+              - kms:CreateGrant
+              - kms:ListGrants
+              - kms:RevokeGrant
+            Resource: "*"
+            Condition:
+              Bool:
+                kms:GrantIsForAWSResource: 'true'
+  GTMPlatformKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    DependsOn:
+      - GTMPlatformKMSKey
+    Properties:
+      AliasName: !Join ['/', ['alias', !Ref GTMPlatformKMSKeyAliasName]]
+      TargetKeyId: !GetAtt GTMPlatformKMSKey.Arn
