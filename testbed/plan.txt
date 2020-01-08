@@ -12,4 +12,4 @@ https://raw.githubusercontent.com/okram999/aws-golden-ami-pipeline-sample/fromCh
 
 {\"us-east-1\": \"f46a5002-eda7-4f69-bf0e-1c73e452cc8a\",\"us-east-2\": \"15593bb6-2fdc-424d-8bd9-23b9f97161b3\",\"us-west-1\": \"7bbf0478-5ca8-4c40-833a-0d395db04d0a\",\"us-west-2\": \"9e041ab6-722d-482e-8371-0f14f78d5968\"}
 
-{\"us-east-1\": \"f46a5002-eda7-4f69-bf0e-1c73e452cc8a\",\"us-east-2\": \"15593bb6-2fdc-424d-8bd9-23b9f97161b3\",\"us-west-1\": \"7bbf0478-5ca8-4c40-833a-0d395db04d0a\",\"us-west-2\": \"9e041ab6-722d-482e-8371-0f14f78d5968\"}
+{\"us-east-1\": \"6f0819c5-7a11-4089-af39-5849a8a790a6\",\"us-east-2\": \"d08365fb-fedb-4538-a761-832d1b1686d5\",\"us-west-1\": \"557192ec-0a5e-4c23-9eed-f22769b288bd\",\"us-west-2\": \"b7ccee62-dc83-4276-b749-5a1f8be77f8b\"}
